@@ -12,6 +12,7 @@ from openpyxl import Workbook
 from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 from werkzeug.exceptions import HTTPException
 from collectors import collect
+from exchange_rates import get_rates
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024
@@ -142,7 +143,7 @@ def website_config():
 
 @app.get('/<name>')
 def website_asset(name):
-    if name not in {'core.js', 'site.js', 'xlsx.js', 'styles.css'}:
+    if name not in {'core.js', 'site.js', 'xlsx.js', 'fx.js', 'styles.css'}:
         from flask import abort
         abort(404)
     return send_from_directory(WEB_DIRECTORY, name)
@@ -156,6 +157,11 @@ def website_brand_asset(filename):
 @app.get('/api/health')
 def health():
     return jsonify(status='ok')
+
+
+@app.get('/api/exchange-rates')
+def exchange_rates():
+    return jsonify(get_rates()), 200, {'Cache-Control': 'no-store'}
 
 
 @app.get('/api/collect')
