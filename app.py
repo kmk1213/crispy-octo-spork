@@ -148,6 +148,11 @@ def website_asset(name):
     return send_from_directory(WEB_DIRECTORY, name)
 
 
+@app.get('/assets/<path:filename>')
+def website_brand_asset(filename):
+    return send_from_directory(WEB_DIRECTORY / 'assets', filename)
+
+
 @app.get('/api/health')
 def health():
     return jsonify(status='ok')

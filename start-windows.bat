@@ -1,7 +1,7 @@
 @echo off
-title Sourcing Radar
+title MK Communication
 cd /d "%~dp0"
-echo Starting Sourcing Radar. Please keep this window open.
+echo Starting MK Communication. Please keep this window open.
 if not exist "launch.py" (
     echo ERROR: Extract the entire ZIP first. Do not run this file inside the ZIP.
     pause

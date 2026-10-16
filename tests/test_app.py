@@ -124,9 +124,10 @@ class WorkflowTests(unittest.TestCase):
         self.assertNotIn('C', [r['group'] for r in result['top']])
 
     def test_home_renders(self):
-        response = self.client.get('/')
-        self.assertEqual(response.status_code, 200)
-        self.assertIn('사입 레이더', response.get_data(as_text=True))
+        with self.client.get('/') as response:
+            self.assertEqual(response.status_code, 200)
+            self.assertIn('MK커뮤니케이션', response.get_data(as_text=True))
+            self.assertIn('data-app="mk-sourcing"', response.get_data(as_text=True))
 
     def test_json_object_and_settings_validation(self):
         endpoints = ('/api/analyze', '/api/compare', '/api/export', '/api/compare/export')

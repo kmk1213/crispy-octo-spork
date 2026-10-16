@@ -171,24 +171,27 @@ class AutoSearchRouteTests(unittest.TestCase):
         collector.assert_not_called()
 
     def test_home_serves_the_browser_site_and_same_origin_assets(self):
-        response = self.client.get('/')
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.mimetype, 'text/html')
-        self.assertIn('사입 레이더', response.get_data(as_text=True))
-        self.assertIn('site.js', response.get_data(as_text=True))
-        self.assertIn('config.js', response.get_data(as_text=True))
+        with self.client.get('/') as response:
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.mimetype, 'text/html')
+            self.assertIn('MK커뮤니케이션', response.get_data(as_text=True))
+            self.assertIn('site.js', response.get_data(as_text=True))
+            self.assertIn('config.js', response.get_data(as_text=True))
         assets = {
             '/core.js': {'text/javascript', 'application/javascript'},
             '/site.js': {'text/javascript', 'application/javascript'},
             '/xlsx.js': {'text/javascript', 'application/javascript'},
             '/styles.css': {'text/css'},
+            '/assets/mk-logo.png': {'image/png'},
         }
         for path, mimetypes in assets.items():
             with self.subTest(path=path):
-                response = self.client.get(path)
-                self.assertEqual(response.status_code, 200)
-                self.assertIn(response.mimetype, mimetypes)
-                self.assertGreater(len(response.data), 0)
+                with self.client.get(path) as response:
+                    self.assertEqual(response.status_code, 200)
+                    self.assertIn(response.mimetype, mimetypes)
+                    self.assertGreater(len(response.data), 0)
+                    if path.endswith('.png'):
+                        self.assertTrue(response.data.startswith(b'\x89PNG\r\n\x1a\n'))
 
     def test_config_enables_same_origin_backend_without_exposing_credentials(self):
         fake_secret = 'test-only-do-not-embed-naver-secret'

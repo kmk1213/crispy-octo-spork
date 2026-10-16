@@ -45,7 +45,7 @@ def main():
             try:
                 connection.request('GET', '/')
                 response = connection.getresponse()
-                if response.status == 200 and '사입 레이더'.encode() in response.read():
+                if response.status == 200 and b'data-app="mk-sourcing"' in response.read():
                     break
             except OSError:
                 pass

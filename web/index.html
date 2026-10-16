@@ -3,26 +3,29 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="한국 사입 상품의 필리핀·베트남 판매 수익을 비교하고 추천 TOP3와 엑셀 분석표를 만드는 사입 레이더">
-  <title>사입 레이더 · 필리핀 & 베트남</title>
+  <meta name="description" content="MK커뮤니케이션의 글로벌 사입·판매 분석. 국내 상품 검색부터 필리핀·베트남 수익 비교, 추천 TOP3와 엑셀 정리까지.">
+  <meta name="theme-color" content="#28292c">
+  <title>MK커뮤니케이션 · 글로벌 소싱</title>
+  <link rel="icon" href="assets/mk-logo.png" type="image/png">
   <link rel="stylesheet" href="styles.css">
   <script defer src="core.js"></script>
   <script defer src="xlsx.js"></script>
   <script defer src="config.js"></script>
   <script defer src="site.js"></script>
 </head>
-<body>
+<body data-app="mk-sourcing">
 <aside class="sidebar">
-  <a class="brand" href="#home"><span class="brand-icon">S</span><span>사입 레이더<small>SOURCING RADAR</small></span></a>
-  <span class="nav-label">WORKSPACE</span>
+  <a class="brand" href="#home" aria-label="MK커뮤니케이션 홈"><img class="brand-icon" src="assets/mk-logo.png" alt="MK 로고" width="56" height="56"><span>MK커뮤니케이션<small>MK COMMUNICATION</small></span></a>
+  <span class="nav-label">SOURCING WORKSPACE</span>
   <nav aria-label="주요 메뉴"><a href="#products">01　사입 후보</a><a href="#costs">02　공통 비용</a><a href="#markets">03　해외 판매 비교</a><a href="#recommendations">04　추천 상품 TOP3</a></nav>
-  <div class="sidebar-note"><strong>한국에서 동남아로</strong><p>필리핀 · 베트남<br>Shopee · Lazada</p><span class="dot"></span> 설치 없이 사용하는 웹사이트</div>
+  <div class="sidebar-note"><span class="sidebar-line"></span><strong>기회를 찾고, 가치를 연결하다.</strong><p>필리핀 · 베트남<br>Shopee · Lazada</p><span class="dot"></span> MK GLOBAL SOURCING</div>
 </aside>
 <main id="home">
-  <header><span class="breadcrumb">WORKSPACE <span>/</span> 상품 수익 분석</span><span class="status-pill">브라우저에서 계산</span></header>
+  <header><span class="breadcrumb">MK COMMUNICATION <span>/</span> 상품 수익 분석</span><span class="status-pill"><span class="dot"></span> GLOBAL COMMERCE</span></header>
   <section class="hero">
-    <div><span class="eyebrow">BUY SMART. SELL BETTER.</span><h1>팔기 전에,<br>남는 금액부터 확인하세요.</h1><p>국내 사입가와 해외 판매 조건을 한눈에.<br>필리핀·베트남의 예상 수익을 비교하고 엑셀로 정리하세요.</p><div class="actions"><a class="button" href="#products">상품 추가하기 <span>↗</span></a><button id="demo" class="secondary">예시로 사용해보기</button></div></div>
-    <div class="hero-card"><span>하나의 상품, 네 가지 판매 시장</span><div class="market-pair"><strong>PH <small>필리핀</small></strong><b>PHP</b></div><div class="market-pair"><strong>VN <small>베트남</small></strong><b>VND</b></div><p>Shopee + Lazada</p><small>수수료 · 환율 · 배송비를 각 시장에 맞게</small></div>
+    <div class="hero-copy"><span class="eyebrow">MK COMMUNICATION · GLOBAL SOURCING</span><h1>좋은 상품을 찾고,<br><em>더 나은 수익</em>을 만듭니다.</h1><p>국내 사입부터 필리핀·베트남 판매까지.<br>상품과 가격을 비교하고, 남는 금액을 먼저 확인하세요.</p><div class="actions"><a class="button" href="#products">상품 찾아보기 <span>↗</span></a><button id="demo" class="secondary">예시로 사용해보기</button></div></div>
+    <div class="hero-brand" aria-hidden="true"><div class="logo-stage"><img src="assets/mk-logo.png" alt="" width="340" height="340"></div><span class="hero-signature">CONNECTING VALUE, CREATING OPPORTUNITY.</span></div>
+    <div class="hero-markets"><span><b>PH</b> 필리핀 <small>PHP</small></span><i></i><span><b>VN</b> 베트남 <small>VND</small></span><span class="market-platforms">Shopee <span>×</span> Lazada</span></div>
   </section>
   <div id="startup" class="notice">화면을 준비하고 있습니다. 안내가 계속 표시되면 새로고침해 주세요.</div>
   <div id="demo-banner" class="notice warning" hidden><strong>예시 데이터입니다.</strong> 표시된 상품·시세·환율·수수료는 기능 설명용이며 실제 가격이 아닙니다. 실제 분석 전 목록을 비워주세요.</div>
@@ -52,6 +55,6 @@
   <section id="recommendations" class="panel"><div class="section-head"><div><span class="step">04 / YOUR TOP PICKS</span><h2>추천 상품 TOP3</h2></div><div class="actions"><label class="compact-label">추천 기준<select id="metric"><option value="profit">예상 순이익순</option><option value="roi_pct">예상 수익률순</option></select></label><button id="comparison-export">비교 결과 엑셀 ↘</button></div></div><p class="hint">서로 다른 상품 그룹에서 가장 유리한 사입처·판매 시장 조합을 추천합니다. 시세 확인, 흑자, 목표 수익률 충족 조건을 적용합니다. 실제 수요·판매량 기반 인기상품 순위는 아닙니다.</p><div id="top3" class="top3"></div><div id="recommendations-empty" class="empty"><strong>수익을 비교할 준비가 되셨나요?</strong><p>사입 후보와 판매 시나리오를 추가하면 조건에 맞는 상품을 최대 3개 추천합니다.</p></div><p id="compare-note" class="hint" role="status"></p><div class="table-wrap"><table><thead><tr><th>추천</th><th>상품 / 그룹</th><th>사입처</th><th>판매 시장</th><th>현지 판매가</th><th>전체 비용</th><th>순이익</th><th>수익률</th><th>시세 확인</th></tr></thead><tbody id="comparison-results"></tbody></table></div></section>
 
   <section class="panel data-panel"><div><h3>작업 내용 관리</h3><p class="hint" id="storage-note">현재 브라우저에 작업 내용을 저장합니다. 공유 PC에서는 사용 후 지워주세요.</p></div><div class="actions"><button id="backup" class="secondary">작업 백업</button><label class="button secondary file-button" for="restore-file">백업 열기<input id="restore-file" type="file" accept=".json,application/json"></label><button id="clear" class="danger">전체 지우기</button></div></section>
-  <footer>사입 레이더 · 가격과 세금은 입력한 가정에 따른 추정입니다. 구매 전 옵션·재고·배송 조건과 국가별 판매 요건을 확인하세요.</footer>
+  <footer><strong>MK커뮤니케이션 <span>MK COMMUNICATION</span></strong><p>가격과 세금은 입력한 가정에 따른 추정입니다. 구매 전 옵션·재고·배송 조건과 국가별 판매 요건을 확인하세요.</p></footer>
 </main><datalist id="groups"></datalist><noscript><div class="noscript">이 사이트는 JavaScript를 사용합니다. 브라우저에서 JavaScript를 허용해 주세요.</div></noscript>
 </body></html>
