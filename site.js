@@ -100,10 +100,45 @@
     if(!state.rows.some(row=>row.group===offer.group))throw new Error('같은 그룹의 사입 후보를 먼저 추가하세요.');
     C.compare({...payload(),offers:[...state.offers,offer]});state.offers.push(offer);refresh();message('판매 시나리오와 추천 결과를 반영했습니다.');$('offer-confirmed').checked=false;
   }));
-  $('search').addEventListener('click',guard(()=>{
+  const sources = {oliveyoung:'올리브영',daiso:'다이소',coupang:'쿠팡',naver:'네이버쇼핑',shopee_ph:'쇼피 필리핀',shopee_vn:'쇼피 베트남',lazada_ph:'Lazada 필리핀',lazada_vn:'Lazada 베트남'};
+  for(const [id,name] of Object.entries(sources)){const label=text('label',name,'checkbox');const input=document.createElement('input');input.type='checkbox';input.value=id;input.checked=true;label.prepend(input);$('source-picker').append(label);}
+  const backend = window.SOURCING_BACKEND?.available===true;
+  $('collector-message').textContent=backend?'검색어를 넣으면 선택한 쇼핑몰의 공개 가격을 서버에서 조회합니다.':'현재 주소에는 자동 검색 서버가 연결되어 있지 않습니다. 자동 수집 웹서버로 배포해야 가격을 조회할 수 있습니다.';
+  const observed=value=>{const date=new Date(value);return Number.isNaN(date.getTime())?'미확인':new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',dateStyle:'short',timeStyle:'short'}).format(date);};
+  function showCollected(data){
+    $('collected-results').replaceChildren();$('source-status').replaceChildren();
+    const statusLabels={ok:'조회됨',empty:'검색 결과 없음',network_blocked:'네트워크 차단',access_denied:'접근 거부',rate_limited:'호출 제한',unsupported_page:'가격 추출 불가',failed:'조회 실패'};
+    for(const source of data.sources||[]){const badge=text('span',(source.source||sources[source.source_id]||source.source_id)+' · '+(statusLabels[source.status]||'조회 실패'),'tag');badge.title=source.message||'';$('source-status').append(badge);}
+    const products=[...(data.products||[])].sort((a,b)=>a.currency.localeCompare(b.currency)||a.price-b.price);
+    for(const product of products){
+      const tr=document.createElement('tr');const name=newCell(tr,'','name');const link=text('a',product.title);try{const url=new URL(product.url);if(['http:','https:'].includes(url.protocol)){link.href=url.href;link.target='_blank';link.rel='noopener noreferrer';}}catch(_){}name.append(link);
+      newCell(tr,(product.source||sources[product.source_id])+' / '+product.country);newCell(tr,Number(product.price).toLocaleString('ko-KR')+' '+product.currency+(product.price_kind==='from'?'부터':''));newCell(tr,product.shipping==null?'미확인':Number(product.shipping).toLocaleString('ko-KR'));newCell(tr,observed(product.observed_at));
+      const action=newCell(tr,'');const button=text('button',product.currency==='KRW'?'사입가 넣기':'현지 판매가 넣기');button.type='button';
+      if(product.price_kind==='from'){button.disabled=true;button.textContent='옵션별 가격 확인 필요';}
+      button.onclick=()=>{
+        if(product.currency==='KRW'){
+          for(const [key,value] of Object.entries({title:product.title,group:'',source:['올리브영','다이소','쿠팡','네이버쇼핑'].includes(product.source)?product.source:'기타',price:product.price,shipping:product.shipping==null?'':product.shipping,url:product.url}))$('product-'+key).value=value;
+          $('acquired-meta').textContent='자동 조회 '+observed(product.observed_at)+' · 동일상품 그룹과 배송료를 확인한 뒤 추가하세요. 배송료가 없으면 0을 입력합니다.';$('product-form').scrollIntoView({behavior:'smooth',block:'center'});$('product-group').focus();
+        }else{
+          const market=product.source_id.toUpperCase().replace('SHOPEE_PH','PH_SHOPEE').replace('SHOPEE_VN','VN_SHOPEE').replace('LAZADA_PH','PH_LAZADA').replace('LAZADA_VN','VN_LAZADA');
+          if(!C.MARKETS[market]){message('이 상품의 판매 시장을 확인할 수 없습니다.',true);return;}
+          $('offer-market').value=market;$('offer-sale_price').value=product.price;$('currency-label').textContent=product.currency;$('offer-sale_url').value=product.url;$('offer-confirmed').checked=false;$('offer-group').value='';$('offer-form').scrollIntoView({behavior:'smooth',block:'center'});$('offer-group').focus();message('현지 판매가를 넣었습니다. 동일상품 그룹·환율·수수료·배송비를 확인하세요.');
+        }
+      };action.append(button);$('collected-results').append(tr);
+    }
+    $('collected-table').hidden=products.length===0;
+    $('collector-message').textContent=(data.message||'')+' 조회 결과 '+products.length+'개. 가격은 동일 통화 안에서 낮은 순이며, 동일상품 여부와 배송료는 별도 확인이 필요합니다.';
+  }
+  $('search').addEventListener('click',guard(async()=>{
     const links=C.searchLinks($('keyword').value);$('search-links').replaceChildren();
     for(const [name,url] of Object.entries(links)){const link=text('a',name+' ↗');link.href=url;link.target='_blank';link.rel='noopener noreferrer';$('search-links').append(link);}
-    message('쇼핑몰 검색 링크를 열어 동일상품의 시세를 확인하세요. 가격 자동 수집은 아직 연결되지 않았습니다.');
+    if(!backend){message('이 주소에는 자동 수집 서버가 연결되어 있지 않습니다. 검색 링크만 사용할 수 있습니다.',true);return;}
+    const selected=[...$('source-picker').querySelectorAll('input:checked')].map(input=>input.value);if(!selected.length)throw new Error('검색할 쇼핑몰을 하나 이상 선택하세요.');
+    $('search').disabled=true;$('collector-message').textContent='공개 상품 가격을 조회하고 있습니다…';$('collected-results').replaceChildren();$('source-status').replaceChildren();$('collected-table').hidden=true;
+    try{
+      const params=new URLSearchParams({q:$('keyword').value,sources:selected.join(',')});const response=await fetch('api/collect?'+params,{headers:{Accept:'application/json'}});const data=await response.json();if(!response.ok)throw new Error(data.error||'자동 수집 요청에 실패했습니다.');showCollected(data);
+      message(data.products?.length?'실제 조회한 가격을 표시했습니다. 출처·옵션·배송료를 확인하세요.':(data.message||'가격을 가져오지 못했습니다. 출처별 상태를 확인하세요.'),!data.products?.length);
+    }catch(error){$('collector-message').textContent='조회에 실패했습니다. '+error.message;throw error;}finally{$('search').disabled=false;}
   }));
   $('keyword').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();$('search').click();}});
   $('csv-file').addEventListener('change',guard(async()=>{
