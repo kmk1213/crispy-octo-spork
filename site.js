@@ -157,7 +157,7 @@
     const file=$('restore-file').files[0];if(!file)return;try{if(file.size>2*1024*1024)throw new Error('백업 파일은 2MB 이하만 가능합니다.');const saved=JSON.parse(await file.text());restore(saved);refresh();message('백업을 불러왔습니다.');}finally{$('restore-file').value='';}
   }));
   function restore(saved){
-    if(!saved||saved.version!==1||!Array.isArray(saved.rows)||!Array.isArray(saved.offers)||!saved.settings)throw new Error('사입 레이더 백업 파일 형식을 확인하세요.');
+    if(!saved||saved.version!==1||!Array.isArray(saved.rows)||!Array.isArray(saved.offers)||!saved.settings)throw new Error('MK커뮤니케이션 백업 파일 형식을 확인하세요.');
     C.compare(saved);const normalized=cleanRows(saved.rows,saved.settings);
     state={version:1,rows:normalized,offers:saved.offers,settings:C.analyze(saved).settings,metric:saved.metric||'profit',demo:saved.demo===true};
     for(const key of Object.keys(labels))$('common-'+key).value=state.settings[key];$('metric').value=state.metric;
