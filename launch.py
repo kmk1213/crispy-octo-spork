@@ -10,6 +10,17 @@ import venv
 import webbrowser
 
 
+def open_browser(port):
+    address = f'http://127.0.0.1:{port}/'
+    print(f'브라우저가 열리지 않으면 주소창에 아래 주소를 입력하세요:\n{address}', flush=True)
+    try:
+        opened = webbrowser.open(address)
+    except (webbrowser.Error, OSError):
+        opened = False
+    if not opened:
+        print('브라우저를 자동으로 열지 못했습니다. 서버는 실행 중이므로 위 주소로 접속할 수 있습니다.', flush=True)
+
+
 def main():
     if sys.version_info < (3, 10):
         raise RuntimeError('Python 3.10 이상을 설치한 뒤 다시 실행하세요.')
@@ -46,7 +57,7 @@ def main():
         print('준비 완료. 이 창을 열어 두세요. 종료하려면 Ctrl+C를 누르세요.', flush=True)
         # This runs on the user's PC; it does not expose a cloud preview or public server.
         if environment.get('SOURCING_NO_BROWSER') != '1':
-            webbrowser.open(f'http://127.0.0.1:{port}/')
+            open_browser(port)
         process.wait()
         return process.returncode
     except KeyboardInterrupt:
