@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="한국 사입 상품의 필리핀·베트남 판매 수익을 비교하고 추천 TOP3와 엑셀 분석표를 만드는 사입 레이더">
+  <title>사입 레이더 · 필리핀 & 베트남</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="core.js"></script>
+  <script defer src="xlsx.js"></script>
+  <script defer src="site.js"></script>
+</head>
+<body>
+<aside class="sidebar">
+  <a class="brand" href="#home"><span class="brand-icon">S</span><span>사입 레이더<small>SOURCING RADAR</small></span></a>
+  <span class="nav-label">WORKSPACE</span>
+  <nav aria-label="주요 메뉴"><a href="#products">01　사입 후보</a><a href="#costs">02　공통 비용</a><a href="#markets">03　해외 판매 비교</a><a href="#recommendations">04　추천 상품 TOP3</a></nav>
+  <div class="sidebar-note"><strong>한국에서 동남아로</strong><p>필리핀 · 베트남<br>Shopee · Lazada</p><span class="dot"></span> 설치 없이 사용하는 웹사이트</div>
+</aside>
+<main id="home">
+  <header><span class="breadcrumb">WORKSPACE <span>/</span> 상품 수익 분석</span><span class="status-pill">브라우저에서 계산</span></header>
+  <section class="hero">
+    <div><span class="eyebrow">BUY SMART. SELL BETTER.</span><h1>팔기 전에,<br>남는 금액부터 확인하세요.</h1><p>국내 사입가와 해외 판매 조건을 한눈에.<br>필리핀·베트남의 예상 수익을 비교하고 엑셀로 정리하세요.</p><div class="actions"><a class="button" href="#products">상품 추가하기 <span>↗</span></a><button id="demo" class="secondary">예시로 사용해보기</button></div></div>
+    <div class="hero-card"><span>하나의 상품, 네 가지 판매 시장</span><div class="market-pair"><strong>PH <small>필리핀</small></strong><b>PHP</b></div><div class="market-pair"><strong>VN <small>베트남</small></strong><b>VND</b></div><p>Shopee + Lazada</p><small>수수료 · 환율 · 배송비를 각 시장에 맞게</small></div>
+  </section>
+  <div id="startup" class="notice">화면을 준비하고 있습니다. 안내가 계속 표시되면 새로고침해 주세요.</div>
+  <div id="demo-banner" class="notice warning" hidden><strong>예시 데이터입니다.</strong> 표시된 상품·시세·환율·수수료는 기능 설명용이며 실제 가격이 아닙니다. 실제 분석 전 목록을 비워주세요.</div>
+  <div id="message" class="notice" role="status" aria-live="polite">상품을 직접 추가하거나 CSV로 가져오세요. 쇼핑몰 검색 링크로 시세를 확인할 수 있습니다.</div>
+  <div class="stats"><div><span>사입 후보</span><strong id="stat-count">0<small>개</small></strong><small>직접 추가·가져온 상품</small></div><div><span>판매 시나리오</span><strong id="stat-offers">0<small>개</small></strong><small>국가·플랫폼별 판매 조건</small></div><div><span>최대 예상 순이익</span><strong id="stat-profit">—</strong><small>입력한 시세와 비용 기준</small></div></div>
+
+  <section id="products" class="panel">
+    <div class="section-head"><div><span class="step">01 / SOURCING</span><h2>사입 후보 모으기</h2></div><div class="actions"><label class="button secondary file-button" for="csv-file">CSV 가져오기<input id="csv-file" type="file" accept=".csv,text/csv"></label><button id="product-export" class="secondary">사입 분석 엑셀</button></div></div>
+    <div class="search-row"><label class="search-label" for="keyword">상품 키워드</label><input id="keyword" placeholder="예: 선크림 50ml, 여행용 수납함"><button id="search">쇼핑몰에서 찾기 ↗</button></div>
+    <p class="hint">검색 링크를 제공합니다. 실시간 가격 자동 수집·판매량 조회는 아직 연결되지 않았습니다. 동일 모델·용량·수량·옵션을 확인하세요.</p><div id="search-links" class="search-links"></div>
+    <form id="product-form"><div class="fields"><label>상품명 <input id="product-title" required maxlength="2000" placeholder="상품 이름"></label><label>동일상품 그룹 <input id="product-group" required maxlength="100" placeholder="예: 선크림-A-50ml-1개" list="groups"></label><label>사입처 <select id="product-source"><option>올리브영</option><option>다이소</option><option>쿠팡</option><option>네이버쇼핑</option><option>기타</option></select></label><label>사입가 (원) <input id="product-price" required type="number" min="0" step="any" placeholder="10000"></label><label>판매처 배송료 (원) <input id="product-shipping" required type="number" min="0" step="any" value="0"></label><label>상품 링크 <input id="product-url" type="url" placeholder="https://"></label></div><div class="form-end"><span class="hint">같은 상품의 사입처에는 같은 그룹명을 입력합니다.</span><button type="submit">후보 추가 +</button></div></form>
+    <div class="table-wrap"><table><thead><tr><th>그룹 내 가격순</th><th>상품 / 동일상품 그룹</th><th>사입처</th><th>배송 포함 사입 합계</th><th>원화 판매가 기준 순이익</th><th></th></tr></thead><tbody id="product-results"></tbody></table><div id="products-empty" class="empty"><strong>아직 추가된 상품이 없습니다</strong><p>상품을 추가하거나 위의 예시 버튼으로 사용법을 확인해 보세요.</p></div></div>
+    <details><summary>CSV 파일 형식</summary><p class="hint">UTF-8 CSV · 필수 열 title, price · 선택 열 source, shipping, group, url. 플랫폼 비교에는 group이 필요합니다. 최대 1,000개.</p><code>title,price,source,shipping,group,url</code><p><button id="csv-sample" class="secondary">빈 CSV 양식 받기</button></p></details>
+  </section>
+
+  <section id="costs" class="panel"><div class="section-head"><div><span class="step">02 / COSTS</span><h2>공통 비용 설정</h2></div><span class="tag">상품 1개 기준 · 비용은 원화</span></div><div id="common-fields" class="fields"></div><p class="hint">원화 기준 판매가는 사입 분석표에만 적용합니다. 해외 플랫폼 비교에는 아래 시나리오의 현지 판매가·환율·비용을 사용합니다. 세금은 매출 비례 충당 추정이며 실제 세무 정산이 아닙니다.</p></section>
+
+  <section id="markets" class="panel"><div class="section-head"><div><span class="step">03 / MARKET COMPARISON</span><h2>어디에서 팔면 좋을까요?</h2></div><span class="tag">필리핀 & 베트남</span></div><p class="hint">상품별로 판매 시장을 추가하세요. 현지 판매가·환율·수수료는 직접 확인한 값을 입력합니다. 해당 비용이 없다면 0을 입력하세요.</p>
+    <form id="offer-form"><div class="fields"><label>동일상품 그룹 <input id="offer-group" required maxlength="100" list="groups" placeholder="사입 후보와 동일한 그룹명"></label><label>판매 국가 / 플랫폼 <select id="offer-market"></select></label><label>현지 판매가 (<span id="currency-label">PHP</span>) <input id="offer-sale_price" required type="number" min="0" step="any" placeholder="판매 시세"></label><label>환율 (현지 통화 1단위 → 원) <input id="offer-exchange_rate" required type="number" min="0.000000001" step="any" placeholder="확인한 환율"></label><label>판매 수수료 (%) <input id="offer-fee_pct" required type="number" min="0" max="100" step="any"></label><label>세금 충당 비율 (%) <input id="offer-tax_pct" required type="number" min="0" max="100" step="any"></label><label>국제·고객 발송비 (원) <input id="offer-outbound_shipping" required type="number" min="0" step="any"></label><label>관세·기타비 (원) <input id="offer-other_cost" required type="number" min="0" step="any"></label><label>반품 충당 비율 (%) <input id="offer-refund_pct" required type="number" min="0" max="100" step="any"></label><label>판매 시세 링크 <input id="offer-sale_url" type="url" placeholder="https://"></label></div><div class="form-end"><label class="checkbox"><input id="offer-confirmed" type="checkbox"> 동일상품 옵션·수량과 판매 시세를 확인했습니다</label><button type="submit">판매 시나리오 추가 +</button></div></form>
+    <div id="offer-list" class="offer-list"></div><div id="offers-empty" class="empty small-empty">시나리오를 추가하면 국가·플랫폼별 예상 수익을 비교합니다.</div>
+  </section>
+
+  <section id="recommendations" class="panel"><div class="section-head"><div><span class="step">04 / YOUR TOP PICKS</span><h2>추천 상품 TOP3</h2></div><div class="actions"><label class="compact-label">추천 기준<select id="metric"><option value="profit">예상 순이익순</option><option value="roi_pct">예상 수익률순</option></select></label><button id="comparison-export">비교 결과 엑셀 ↘</button></div></div><p class="hint">서로 다른 상품 그룹에서 가장 유리한 사입처·판매 시장 조합을 추천합니다. 시세 확인, 흑자, 목표 수익률 충족 조건을 적용합니다. 실제 수요·판매량 기반 인기상품 순위는 아닙니다.</p><div id="top3" class="top3"></div><div id="recommendations-empty" class="empty"><strong>수익을 비교할 준비가 되셨나요?</strong><p>사입 후보와 판매 시나리오를 추가하면 조건에 맞는 상품을 최대 3개 추천합니다.</p></div><p id="compare-note" class="hint" role="status"></p><div class="table-wrap"><table><thead><tr><th>추천</th><th>상품 / 그룹</th><th>사입처</th><th>판매 시장</th><th>현지 판매가</th><th>전체 비용</th><th>순이익</th><th>수익률</th><th>시세 확인</th></tr></thead><tbody id="comparison-results"></tbody></table></div></section>
+
+  <section class="panel data-panel"><div><h3>작업 내용 관리</h3><p class="hint" id="storage-note">현재 브라우저에 작업 내용을 저장합니다. 공유 PC에서는 사용 후 지워주세요.</p></div><div class="actions"><button id="backup" class="secondary">작업 백업</button><label class="button secondary file-button" for="restore-file">백업 열기<input id="restore-file" type="file" accept=".json,application/json"></label><button id="clear" class="danger">전체 지우기</button></div></section>
+  <footer>사입 레이더 · 가격과 세금은 입력한 가정에 따른 추정입니다. 구매 전 옵션·재고·배송 조건과 국가별 판매 요건을 확인하세요.</footer>
+</main><datalist id="groups"></datalist><noscript><div class="noscript">이 사이트는 JavaScript를 사용합니다. 브라우저에서 JavaScript를 허용해 주세요.</div></noscript>
+</body></html>
