@@ -11,6 +11,14 @@ const {spawn} = require('node:child_process');
   const web=path.resolve(__dirname,'../web');
   const server=http.createServer((request,response)=>{
     const relative=decodeURIComponent(request.url.split('?')[0]);
+    // Synthetic response validates browser wiring; it is not a live scrape fixture.
+    if(relative==='/config.js'){response.writeHead(200,{'Content-Type':'text/javascript'});response.end('window.SOURCING_BACKEND={available:true};');return;}
+    if(relative==='/api/collect'){
+      const blocked=new URL(request.url,'http://test').searchParams.get('q')==='blocked';
+      const base={shipping:null,url:'https://example.com/product',observed_at:'2026-01-01T00:00:00Z',price_kind:'fixed'};
+      const products=blocked?[]:[{...base,id:'mock-1',source_id:'oliveyoung',source:'올리브영',country:'한국',currency:'KRW',title:'모의 공개 상품',price:10000},{...base,id:'mock-2',source_id:'daiso',source:'다이소',country:'한국',currency:'KRW',title:'모의 옵션 가격',price:5000,price_kind:'from'},{...base,id:'mock-3',source_id:'shopee_ph',source:'Shopee 필리핀',country:'필리핀',currency:'PHP',title:'Mock foreign product',price:500}];
+      response.writeHead(200,{'Content-Type':'application/json'});response.end(JSON.stringify({query:'fixture',products,sources:[{source_id:'coupang',source:'쿠팡',status:'network_blocked',message:'모의 프록시 차단'}],message:blocked?'모의 수집 실패':'브라우저 시험용 모의 응답'}));return;
+    }
     const file=path.resolve(web,'.'+(relative==='/'?'/index.html':relative));
     if(!file.startsWith(web+path.sep)||!fs.existsSync(file)){response.writeHead(404);response.end();return;}
     const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css'}[path.extname(file)]||'application/octet-stream';
@@ -47,13 +55,27 @@ const {spawn} = require('node:child_process');
     assert.equal(await evaluate('document.querySelectorAll("#product-results tr").length'),4);
     await evaluate('document.getElementById("keyword").value="선크림";document.getElementById("search").click()');
     assert.equal(await evaluate('document.querySelectorAll("#search-links a").length'),8);
+    await waitFor(()=>evaluate('document.querySelectorAll("#collected-results tr").length===3'),'automatic collector fixture');
+    assert.match(await evaluate('document.getElementById("source-status").textContent'),/네트워크 차단/);
+    assert.equal(await evaluate('document.querySelectorAll("#collected-results button:disabled").length'),1);
+    assert.match(await evaluate('document.getElementById("collected-results").textContent'),/미확인/);
+    await evaluate(`[...document.querySelectorAll('#collected-results tr')].find(row=>row.textContent.includes('모의 공개 상품')).querySelector('button').click()`);
+    assert.equal(await evaluate('document.getElementById("product-price").value'),'10000');
+    assert.equal(await evaluate('document.getElementById("product-shipping").value'),'');
+    await evaluate(`[...document.querySelectorAll('#collected-results tr')].find(row=>row.textContent.includes('Mock foreign')).querySelector('button').click()`);
+    assert.equal(await evaluate('document.getElementById("offer-market").value'),'PH_SHOPEE');
+    assert.equal(await evaluate('document.getElementById("offer-sale_price").value'),'500');
+    assert.equal(await evaluate('document.getElementById("offer-confirmed").checked'),false);
+    await evaluate('document.getElementById("keyword").value="blocked";document.getElementById("search").click()');
+    await waitFor(()=>evaluate('!document.getElementById("search").disabled'),'blocked collector fixture');
+    assert.equal(await evaluate('document.getElementById("collected-table").hidden'),true);
     const desktop=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});fs.writeFileSync('/tmp/sourcing-site-desktop.png',Buffer.from(desktop.data,'base64'));
     await send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
     assert.equal(await evaluate('document.documentElement.scrollWidth<=window.innerWidth'),true);
     const mobile=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});fs.writeFileSync('/tmp/sourcing-site-mobile.png',Buffer.from(mobile.data,'base64'));
     await evaluate('window.confirm=()=>true;document.getElementById("clear").click()');
     assert.equal(await evaluate('document.querySelectorAll("#product-results tr").length'),0);
-    await evaluate(`document.getElementById('product-title').value='수동 검증 상품';document.getElementById('product-group').value='manual';document.getElementById('product-price').value='10000';document.getElementById('product-form').requestSubmit()`);
+    await evaluate(`document.getElementById('product-title').value='수동 검증 상품';document.getElementById('product-group').value='manual';document.getElementById('product-price').value='10000';document.getElementById('product-shipping').value='0';document.getElementById('product-form').requestSubmit()`);
     assert.equal(await evaluate('document.querySelectorAll("#product-results tr").length'),1);
     await evaluate(`for(const [key,value] of Object.entries({group:'manual',market:'PH_SHOPEE',sale_price:1000,exchange_rate:20,fee_pct:10,tax_pct:5,outbound_shipping:3000,other_cost:0,refund_pct:2}))document.getElementById('offer-'+key).value=value;document.getElementById('offer-confirmed').checked=true;document.getElementById('offer-form').requestSubmit()`);
     assert.equal(await evaluate('document.querySelectorAll("#top3 .pick").length'),1);
@@ -68,7 +90,7 @@ const {spawn} = require('node:child_process');
     assert.equal(await evaluate('document.querySelectorAll("#top3 .pick").length'),1);
     assert.equal(await evaluate('document.getElementById("stat-profit").textContent'),'4,100원');
     assert.deepEqual(errors,[]);
-    console.log('Browser checks passed: startup, demo TOP3, saved reload, 8 search links, mobile layout, manual product/market, exact profit, XLSX download, CSV import.');
+    console.log('Browser checks passed: synthetic collector response, blocked/unknown-shipping/from-price handling, domestic/foreign price insertion, startup, TOP3, saved reload, mobile layout, exact profit, XLSX download, CSV import. Live scraping not asserted.');
   }finally{
     if(socket)socket.close();browser.kill('SIGTERM');await new Promise(resolve=>{if(browser.exitCode!==null)resolve();else browser.once('exit',resolve);});await new Promise(resolve=>server.close(resolve));fs.rmSync(temporary,{recursive:true,force:true});
   }

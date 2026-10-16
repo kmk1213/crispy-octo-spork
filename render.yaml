@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: sourcing-radar
+    runtime: python
+    plan: free
+    autoDeploy: false
+    buildCommand: python -m pip install --no-cache-dir -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 60 app:app
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.10

@@ -2,16 +2,21 @@ import csv
 import io
 import math
 import os
+from pathlib import Path
+import threading
 from urllib.parse import urlencode, urlsplit
 
 import requests
-from flask import Flask, jsonify, render_template, request, send_file
+from flask import Flask, jsonify, request, send_file, send_from_directory
 from openpyxl import Workbook
 from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 from werkzeug.exceptions import HTTPException
+from collectors import collect
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024
+WEB_DIRECTORY = Path(__file__).resolve().parent / 'web'
+COLLECTION_SLOTS = threading.BoundedSemaphore(2)
 PLATFORMS = {
     '올리브영': 'https://www.oliveyoung.co.kr/store/search/getSearchMain.do?query=',
     '다이소': 'https://www.daisomall.co.kr/ds/search/totalSearch?searchTerm=',
@@ -126,7 +131,39 @@ def server_error(error):
 
 @app.get('/')
 def home():
-    return render_template('index.html', defaults=DEFAULTS, markets=MARKETS)
+    return send_from_directory(WEB_DIRECTORY, 'index.html')
+
+
+@app.get('/config.js')
+def website_config():
+    return app.response_class('window.SOURCING_BACKEND = {available: true};\n', mimetype='text/javascript',
+                              headers={'Cache-Control': 'no-store'})
+
+
+@app.get('/<name>')
+def website_asset(name):
+    if name not in {'core.js', 'site.js', 'xlsx.js', 'styles.css'}:
+        from flask import abort
+        abort(404)
+    return send_from_directory(WEB_DIRECTORY, name)
+
+
+@app.get('/api/health')
+def health():
+    return jsonify(status='ok')
+
+
+@app.get('/api/collect')
+def collect_prices():
+    keyword = request.args.get('q', '').strip()
+    sources = [part.strip() for value in request.args.getlist('sources') for part in value.split(',') if part.strip()]
+    if not COLLECTION_SLOTS.acquire(blocking=False):
+        return jsonify(error='다른 가격 조회를 처리하고 있습니다. 잠시 후 다시 검색하세요.'), 429
+    try:
+        result = collect(keyword, sources=sources or None)
+        return jsonify(result), 200, {'Cache-Control': 'no-store'}
+    finally:
+        COLLECTION_SLOTS.release()
 
 
 @app.get('/api/search')
